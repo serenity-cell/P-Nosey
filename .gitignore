@@ -1,6 +1,12 @@
 # Prerequisites
 *.d
 
+# Cmake artifact
+*build
+
+# vscode objects
+*.cache
+
 # Compiled Object files
 *.slo
 *.lo
