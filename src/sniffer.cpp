@@ -47,8 +47,6 @@ void Sniffer::startSniffing() {
 
     pcap_loop(handler, count, packetHandeler, (u_char*) this);
     pcap_freecode(&compiledFilter);
-    
-
 
 }
 
@@ -59,7 +57,7 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     const struct tcphdr *tcp; /* The TCP header */
     const char *payload; /* Packet payload */
 
-
+    // passing on the main (this->)
     Sniffer*  self= (Sniffer*) args;
 
 
@@ -78,7 +76,7 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     payload = (char*)(packet + sizeof(ether_header) + ip->ihl * 4 + tcp->doff * 4);
 
 
-
+    // read the packets that are wrapped by the network
     std::string source_IP = inet_ntoa(*(struct in_addr*)&ip->saddr);
     std::string dest_IP = inet_ntoa(*(struct in_addr*)&ip->daddr);
     u_int source_port = ntohs(tcp->source);
