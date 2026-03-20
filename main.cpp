@@ -1,9 +1,10 @@
+#include "src/sniffer.hpp"
 #include <cstring>
 #include <string>
 
 
 void userOptions (int &arg_count, char **&arg_vector, std::string &network, std::string &filter, int &packet_batch) {
-    for (int i = 0; i < arg_count; i++) {
+    for (int i = 1; i < arg_count; i++) {
         if (std::strcmp(arg_vector[i], "-i") == 0) {
             network = arg_vector[++i];
         }
@@ -19,10 +20,12 @@ void userOptions (int &arg_count, char **&arg_vector, std::string &network, std:
 int main(int arg_count, char *arg_vector[]) {
     std::string network;
     std::string filter;
-    int packet_batch;
+    int packet_batch = -1;
 
     userOptions(arg_count, arg_vector, network, filter, packet_batch);
 
+    Sniffer sniffer(network, filter, packet_batch);
+    sniffer.startSniffing();
 
 
 }
