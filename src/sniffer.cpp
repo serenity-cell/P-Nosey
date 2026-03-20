@@ -79,5 +79,15 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     u_int dest_port = ntohs(tcp->dest);
     int length = header->len;
 
+
+    // tcp flags
+    char flags[7] = "-----"; // Initialize with dashes
+    if (tcp->th_flags & TH_FIN) flags[0] = 'F';
+    if (tcp->th_flags & TH_SYN) flags[1] = 'S';
+    if (tcp->th_flags & TH_RST) flags[2] = 'R';
+    if (tcp->th_flags & TH_PUSH) flags[3] = 'P';
+    if (tcp->th_flags & TH_ACK) flags[4] = 'A';
+    if (tcp->th_flags & TH_URG) flags[5] = 'U';   
+
     std::cout << "[TCP]" <<source_IP << ":" << source_port << " -> " << dest_IP << ":" << dest_port << " length:" << length << "\n";
 }
