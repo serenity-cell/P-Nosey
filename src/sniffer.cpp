@@ -3,11 +3,13 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <iostream>
+
 #include <pcap/pcap.h>
 
 Sniffer::Sniffer(std::string network, std::string bpf_filter, int packet_batch) {
     connection = network;
-    filter = bpf_filter;
+    sniffer_filter = bpf_filter;
     count = packet_batch;
     handler = nullptr;
 }
@@ -30,7 +32,7 @@ void Sniffer::startSniffing() {
     }
 
 
-    int compile = pcap_compile(handler, &compiledFilter, filter.c_str(), 1, PCAP_NETMASK_UNKNOWN);
+    int compile = pcap_compile(handler, &compiledFilter, sniffer_filter.c_str(), 1, PCAP_NETMASK_UNKNOWN);
     if (compile == -1) {
         std::cout << "compiler failed";
         return;
