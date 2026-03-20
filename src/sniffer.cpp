@@ -60,21 +60,17 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     // passing on the main (this->)
     Sniffer*  self= (Sniffer*) args;
 
-
+    // passes up the address of the 
     ethernet = (struct ether_header*)(packet);
     if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) {
         return;  // not IPv4, skip it
     }
-
     ip = (struct iphdr*)(packet + sizeof(ether_header));
     if (ip->protocol != IPPROTO_TCP) {
         return;
     }
-
     tcp = (struct tcphdr*)(packet + sizeof(ether_header) + ip->ihl * 4);
-
     payload = (char*)(packet + sizeof(ether_header) + ip->ihl * 4 + tcp->doff * 4);
-
 
     // read the packets that are wrapped by the network
     std::string source_IP = inet_ntoa(*(struct in_addr*)&ip->saddr);
@@ -83,5 +79,5 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     u_int dest_port = ntohs(tcp->dest);
     int length = header->len;
 
-    std::cout << "[TCP]" <<source_IP << ":" << source_port << " -> " << dest_IP << ":" << dest_port << "length:" << length << "\n";
+    std::cout << "[TCP]" <<source_IP << ":" << source_port << " -> " << dest_IP << ":" << dest_port << " length:" << length << "\n";
 }
