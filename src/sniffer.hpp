@@ -8,14 +8,13 @@
 #include <netinet/udp.h>
 #include <net/ethernet.h>
 #include <iostream>
-#include <iomanip>
 #include <arpa/inet.h>
 
 class Sniffer {
     private:
     pcap_t* handler;
     std::string connection;
-    std::string filter;
+    std::string sniffer_filter;
     int count;
 
 
