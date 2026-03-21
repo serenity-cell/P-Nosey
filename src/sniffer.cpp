@@ -1,9 +1,12 @@
 #include "sniffer.hpp"
+#include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h>  
 #include <iostream>
+#include <iomanip>
 
 #include <pcap/pcap.h>
 
@@ -51,11 +54,20 @@ void Sniffer::startSniffing() {
 }
 
 void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_char *packet) {
+    // TODO: implement DRY 
+    // declaring headers
+    const struct ether_header *ethernet;
+    const struct iphdr *ip;
+    const struct tcphdr *tcp;
+    const struct udphdr *udp;
+    const char *payload; 
 
-    const struct ether_header *ethernet; /* The ethernet header */
-    const struct iphdr *ip; /* The IP header */
-    const struct tcphdr *tcp; /* The TCP header */
-    const char *payload; /* Packet payload */
+    // packet reading declerations
+    std::string source_IP;
+    std::string dest_IP;
+    u_int source_port;
+    u_int dest_port;
+    int length;
 
     // passing on the main (this->)
     Sniffer*  self= (Sniffer*) args;
@@ -65,29 +77,68 @@ void Sniffer::packetHandeler(u_char *args, const pcap_pkthdr *header, const u_ch
     if (ntohs(ethernet->ether_type) != ETHERTYPE_IP) {
         return;  // not IPv4, skip it
     }
+
     ip = (struct iphdr*)(packet + sizeof(ether_header));
-    if (ip->protocol != IPPROTO_TCP) {
+    if (ip->protocol == IPPROTO_TCP) {
+        tcp = (struct tcphdr*)(packet + sizeof(ether_header) + ip->ihl * 4);
+        payload = (char*)(packet + sizeof(ether_header) + ip->ihl * 4 + tcp->doff * 4);
+
+        source_port = ntohs(tcp->source);
+        dest_port = ntohs(tcp->dest);
+        length = header->len;
+        
+    }
+    else if (ip->protocol == IPPROTO_UDP) {
+        udp = (struct udphdr*)(packet + sizeof(ether_header) + ip->ihl * 4);
+
+        // read the packets that are wrapped by the network
+        source_port = ntohs(udp->source);
+        dest_port = ntohs(udp->dest);
+        length = header->len;
+    
+    }
+    else {
         return;
     }
-    tcp = (struct tcphdr*)(packet + sizeof(ether_header) + ip->ihl * 4);
-    payload = (char*)(packet + sizeof(ether_header) + ip->ihl * 4 + tcp->doff * 4);
+   
+    source_IP = inet_ntoa(*(struct in_addr*)&ip->saddr);
+    dest_IP = inet_ntoa(*(struct in_addr*)&ip->daddr);
+    if (ip->protocol == IPPROTO_TCP) {
+        // tcp flags
+        char flags[7] = "-----"; // Initialize with dashes
+        if (tcp->th_flags & TH_FIN) flags[0] = 'F';
+        if (tcp->th_flags & TH_SYN) flags[1] = 'S';
+        if (tcp->th_flags & TH_RST) flags[2] = 'R';
+        if (tcp->th_flags & TH_PUSH) flags[3] = 'P';
+        if (tcp->th_flags & TH_ACK) flags[4] = 'A';
+        if (tcp->th_flags & TH_URG) flags[5] = 'U';   
 
-    // read the packets that are wrapped by the network
-    std::string source_IP = inet_ntoa(*(struct in_addr*)&ip->saddr);
-    std::string dest_IP = inet_ntoa(*(struct in_addr*)&ip->daddr);
-    u_int source_port = ntohs(tcp->source);
-    u_int dest_port = ntohs(tcp->dest);
-    int length = header->len;
-
-
-    // tcp flags
-    char flags[7] = "-----"; // Initialize with dashes
-    if (tcp->th_flags & TH_FIN) flags[0] = 'F';
-    if (tcp->th_flags & TH_SYN) flags[1] = 'S';
-    if (tcp->th_flags & TH_RST) flags[2] = 'R';
-    if (tcp->th_flags & TH_PUSH) flags[3] = 'P';
-    if (tcp->th_flags & TH_ACK) flags[4] = 'A';
-    if (tcp->th_flags & TH_URG) flags[5] = 'U';   
-
-    std::cout << "[TCP]" <<source_IP << ":" << source_port << " -> " << dest_IP << ":" << dest_port << " length:" << length << "\n";
-}
+        std::cout << std::left
+        << std::setw(6) << "[TCP] "
+        << std::setw(6) << flags
+        << std::setw(15) << source_IP 
+        << " : "   
+        << std::setw(5) << source_port
+        << " -> "
+        << std::setw(15) << dest_IP
+        << " : "
+        << std::setw(7) << dest_port
+        << std::setw(8) << " length: "
+        << std::setw(13) << length 
+        << std::endl;
+    }
+    else if (ip->protocol == IPPROTO_UDP) {
+        std::cout << std::left
+        << std::setw(12) << "[UDP] "
+        << std::setw(15) << source_IP 
+        << " : "   
+        << std::setw(5) << source_port
+        << " -> "
+        << std::setw(15) << dest_IP
+        << " : "
+        << std::setw(7) << dest_port
+        << std::setw(8) << " length: "
+        << std::setw(13) << length 
+        << std::endl;
+    }
+} 

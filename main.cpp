@@ -25,6 +25,8 @@ int main(int arg_count, char *arg_vector[]) {
     userOptions(arg_count, arg_vector, network, filter, packet_batch);
 
     Sniffer sniffer(network, filter, packet_batch);
+    std::cout << "              SOURCE                  ->    DESTINATION            PACKET SIZE \n"
+              << "---------------------------------------------------------------------------\n";
     sniffer.startSniffing();
 
 
