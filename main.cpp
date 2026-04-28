@@ -4,6 +4,9 @@
 
 
 void userOptions (int &arg_count, char **&arg_vector, std::string &network, std::string &filter, int &packet_batch) {
+    if (std::strcmp(arg_vector[1], "-man") == 0 ) {
+        std::cout << "\n Usage: ./P-Nosey -i [ip] -fitler ['udp' or 'tcp'] -range [how many pakcets to sniff before ending. default: 0 aka. infinite]";
+    }
     for (int i = 1; i < arg_count; i++) {
         if (std::strcmp(arg_vector[i], "-i") == 0) {
             network = arg_vector[++i];
